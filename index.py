@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import re
+
 import dash_core_components as dcc
 import dash_html_components as html
 
@@ -19,49 +21,79 @@ from apps import (
 server = app.server
 
 # boooooootleg route table
-ROUTES = {
-    '/': html.H2("hello, world"),
-    '/barchart_example': barchartexample.layout,
-    '/callback_w_caching': callbackwcaching.layout,
-    '/callback_w_dist_agg': callbackwdistagg.layout,
-    '/callback_w_hidden_div': callbackwhiddendiv.layout,
-    '/callback_w_state': callbackwstate.layout,
-    '/chained_inputs': chainedinputs.layout,
-    '/crossfilter': crossfilter.layout,
-    '/graph_properties': graphproperties.layout,
-    '/graph_with_slider': graphslider.layout,
-    '/hover_update': hoverupdate.layout,
-    '/interactive_widget': interactivewidget.layout,
-    '/live_updates': liveupdate.layout,
-    '/markdown': markdown.layout,
-    '/multiple_inputs': multiinput.layout,
-    '/plot_example': plotexample.layout,
-    '/table_example': tableexample.layout,
-    '/widgets': widgets.layout,
+TABS = {
+    'hello, world': html.H2("hello, world"),
+    'barchart example': barchartexample.layout,
+    'callback w caching': callbackwcaching.layout,
+    'callback w dist agg': callbackwdistagg.layout,
+    'callback w hidden div': callbackwhiddendiv.layout,
+    'callback w state': callbackwstate.layout,
+    'chained inputs': chainedinputs.layout,
+    'crossfilter': crossfilter.layout,
+    'graph properties': graphproperties.layout,
+    'graph with slider': graphslider.layout,
+    'hover update': hoverupdate.layout,
+    'interactive widget': interactivewidget.layout,
+    'live updates': liveupdate.layout,
+    'markdown': markdown.layout,
+    'multiple inputs': multiinput.layout,
+    'plot example': plotexample.layout,
+    'table example': tableexample.layout,
+    'widgets': widgets.layout,
 }
+TAB_URLS = {
+    '/{}'.format(re.sub('\s+', '_', re.sub('[^\s\w]+', '', tabname))): tabname
+    for tabname in TABS
+}
+# add one landing tab, hard-coded
+TAB_URLS['/'] = 'hello, world'
 
 # build the frame in which we will render the different apps based on url. leave
 # the list of other padges at the top like a very shitty toc
-app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    html.Div(className="row", children=[
-        html.Div(className="three columns", children=[
-            html.H2('app list'),
-            html.Ul([
-                html.Li([html.A(children=href, href=href)])
-                for href in ROUTES.keys()
-            ]),
-        ]),
-        html.Div(className="nine columns", id='page-content'),
-    ]),
-], className="container")
+app.layout = html.Div(
+    [
+        dcc.Location(id='url', refresh=False),
+        html.H1("tabs are fab"),
+        html.Div(
+            className="row",
+            children=[
+                html.Div(
+                    id='tab-list',
+                    children=dcc.Tabs(
+                        tabs=[{'label': k, 'value': k} for k in TABS],
+                        value=3,
+                        id='tabs',
+                        vertical=True,
+                        style={
+                            'height': '100vh',
+                            'borderRight': 'thin lightgrey solid',
+                            'textAlign': 'left',
+                        }
+                    ),
+                    style={'width': '20%', 'float': 'left'},
+                ),
+                html.Div(id="tab-spacer", style={'width': '3%'}),
+                html.Div(
+                    id='tab-output',
+                    style={'width': '77%', 'float': 'right'},
+                ),
+            ]
+        ),
+    ],
+    className="container"
+)
 
 
-# this callback will replace the page-content div with whatever the url dictates
-# (think of this as a bad routing table)
-@app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
-def display_page(pathname):
-    return ROUTES.get(pathname, '404')
+# for each tab, just replace the content with the sub-app layout element
+@app.callback(Output('tab-output', 'children'), [Input('tabs', 'value')])
+def display_tab(tabval):
+    return TABS.get(tabval, '404')
+
+
+@app.callback(Output('tabs', 'value'), [Input('url', 'pathname')])
+def update_tab_from_url(urlpathname):
+    # remove punctuation and replace all whitespaces with underscores
+    return TAB_URLS.get(urlpathname)
 
 
 if __name__ == "__main__":
