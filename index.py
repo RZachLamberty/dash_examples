@@ -3,6 +3,7 @@ import re
 
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table_experiments as dt
 
 from dash.dependencies import Input, Output
 
@@ -14,7 +15,8 @@ from apps import (
     barchartexample, callbackwcaching, callbackwdistagg, callbackwhiddendiv,
     callbackwstate, chainedinputs, crossfilter, graphproperties, graphslider,
     hoverupdate, interactivewidget, liveupdate, markdown, multiinput,
-    plotexample, tableexample, widgets
+    plotexample, tableexample, widgets,
+    datatableexample, dashtableexample,
 )
 
 
@@ -40,6 +42,8 @@ TABS = {
     'plot example': plotexample.layout,
     'table example': tableexample.layout,
     'widgets': widgets.layout,
+    'datatable example': datatableexample.layout,
+    'dash table example': dashtableexample.layout,
 }
 TAB_URLS = {
     '/{}'.format(re.sub('\s+', '_', re.sub('[^\s\w]+', '', tabname))): tabname
@@ -79,8 +83,12 @@ app.layout = html.Div(
                 ),
             ]
         ),
+        # wowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+        #https://community.plot.ly/t/unable-to-load-table-on-multipage-dash/6347
+        html.Div(dt.DataTable(rows=[{}]), style={'display': 'none'}),
     ],
-    className="container"
+    className="container",
+    style={'max-width': '80%'}
 )
 
 
